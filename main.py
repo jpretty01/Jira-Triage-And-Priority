@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pytz
 
 # JIRA Authentication
-jira_url = "https://yourdomain.atlassian.net"
+jira_url = "https://yourenvironment.atlassian.net"
 username = "your_username"
 api_token = "your_api_token"
 jira_client = JIRA(jira_url, basic_auth=(username, api_token))
@@ -26,8 +26,8 @@ assignee_mapping = {
 
 # Define priority levels based on keywords
 priority_mapping = {
-    'crash': 'High',
-    'slow': 'Medium',
+    'crash': 'Critical',
+    'slow': 'High',
     'minor': 'Low'
 }
 
