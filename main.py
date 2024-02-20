@@ -1,9 +1,14 @@
-# Jeremy Pretty
-# JIRA bug Triage and Priority
-
 from jira import JIRA
 from datetime import datetime, timedelta
 import pytz
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+
+# Ensure required NLTK resources are downloaded
+nltk.download('punkt')
+nltk.download('stopwords')
 
 # JIRA Authentication
 jira_url = "https://yourenvironment.atlassian.net"
@@ -34,15 +39,26 @@ priority_mapping = {
 # Initialize a list to record updates
 update_summary = []
 
+# NLTK setup for text processing
+stemmer = PorterStemmer()
+stop_words = set(stopwords.words('english'))
+
+def process_text(text):
+    # Tokenize and stem the text
+    tokens = word_tokenize(text)
+    stemmed_words = [stemmer.stem(word) for word in tokens if word.isalpha() and word not in stop_words]
+    return stemmed_words
+
 # Bug Triage and Assignment Logic
 for bug in new_bugs:
     description = bug.fields.description.lower()
+    processed_desc = process_text(description)
     assigned = False
     triaged = False
 
     # Assignee determination
     for keyword, assignee in assignee_mapping.items():
-        if keyword in description:
+        if any(stemmer.stem(keyword) in processed_desc):
             try:
                 jira_client.assign_issue(bug, assignee)
                 update_summary.append(f"Bug ID: {bug.key} assigned to {assignee}")
@@ -56,7 +72,7 @@ for bug in new_bugs:
 
     # Priority determination
     for keyword, priority in priority_mapping.items():
-        if keyword in description:
+        if any(stemmer.stem(keyword) in processed_desc):
             try:
                 jira_client.issue(bug.key).update(fields={'priority': {'name': priority}})
                 update_summary.append(f"Bug ID: {bug.key} set to priority {priority}")
